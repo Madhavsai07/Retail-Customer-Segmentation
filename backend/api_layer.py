@@ -1,7 +1,13 @@
 """
 api_layer.py
 All REST API routes for the Retail Customer Segmentation app.
-Authentication is handled by Supabase. Routes are protected via JWT verification.
+
+Public endpoints (no auth required):
+  GET /health, /metrics, /segment
+
+Protected endpoints (Supabase JWT required):
+  GET /personas, /customer/{id}, /cluster/{id}/customers, /customer/{id}/transactions
+
 Data is read from the global `data` dict populated by main.py on startup.
 """
 
@@ -19,10 +25,10 @@ def get_data():
     return data
 
 
-# ── Data endpoints (require Supabase login) ───────────────────────────────────
+# ── Public endpoints (no authentication required) ────────────────────────────
 
 @router.get("/health", tags=["system"])
-def health_check(user: dict = Depends(auth.get_current_user)):
+def health_check():
     """Check if the backend and data are ready."""
     d = get_data()
     return {
@@ -33,7 +39,7 @@ def health_check(user: dict = Depends(auth.get_current_user)):
 
 
 @router.get("/metrics", tags=["analytics"])
-def get_metrics(user: dict = Depends(auth.get_current_user)):
+def get_metrics():
     """Return top-level KPI numbers (customer count, recency, frequency, revenue)."""
     d = get_data()
     rfm = d.get("rfm_raw")
@@ -51,7 +57,7 @@ def get_metrics(user: dict = Depends(auth.get_current_user)):
 
 
 @router.get("/segment", tags=["analytics"])
-def get_segments(k: int = 4, user: dict = Depends(auth.get_current_user)):
+def get_segments(k: int = 4):
     """Return customer RFM data with their cluster labels for a given K."""
     d = get_data()
     rfm = d.get("rfm_raw")
@@ -86,6 +92,8 @@ def get_segments(k: int = 4, user: dict = Depends(auth.get_current_user)):
         "scatter_data": scatter_data,
     }
 
+
+# ── Protected endpoints (Supabase JWT required) ──────────────────────────────
 
 @router.get("/personas", tags=["analytics"])
 def get_personas(k: int = 4, user: dict = Depends(auth.get_current_user)):
