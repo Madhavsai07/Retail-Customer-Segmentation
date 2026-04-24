@@ -2,11 +2,13 @@ import axios from 'axios';
 import { supabase } from '../supabaseClient';
 
 // ── Axios instance ────────────────────────────────────────────────────────────
-// All API calls go through this. The base URL points to the FastAPI backend.
+// In production, set VITE_BACKEND_URL to your deployed backend (e.g. https://your-api.onrender.com)
+// In development, it falls back to localhost:8000
 const API = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000',
   timeout: 30000,
 });
+
 
 // Automatically attach the Supabase JWT (access token from the active session)
 API.interceptors.request.use(async (req) => {
