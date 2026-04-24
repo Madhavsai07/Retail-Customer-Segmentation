@@ -47,22 +47,17 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# ── CORS origins ─────────────────────────────────────────────────────────────
-# Set ALLOWED_ORIGINS in your environment (comma-separated) for production.
-# Example: ALLOWED_ORIGINS=https://retailiq.vercel.app,https://www.retailiq.app
-_raw_origins = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://localhost:3000"   # default for local dev
-)
-ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
-
+# ── CORS ─────────────────────────────────────────────────────────────────────
+# Allowing all origins for now so the Vercel frontend can reach this backend.
+# To restrict later, set ALLOWED_ORIGINS env var and replace "*" with the list.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,  # must be False when allow_origins=["*"]
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 app.include_router(router)
 
