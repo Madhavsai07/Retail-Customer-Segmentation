@@ -10,6 +10,7 @@ Startup strategy:
 
 import json
 import logging
+import os
 from pathlib import Path
 
 import numpy as np
@@ -46,9 +47,18 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# ── CORS origins ─────────────────────────────────────────────────────────────
+# Set ALLOWED_ORIGINS in your environment (comma-separated) for production.
+# Example: ALLOWED_ORIGINS=https://retailiq.vercel.app,https://www.retailiq.app
+_raw_origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:3000"   # default for local dev
+)
+ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

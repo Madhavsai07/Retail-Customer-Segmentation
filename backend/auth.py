@@ -6,13 +6,15 @@ Tokens are fetched and cached at startup — no secret key needed.
 
 import jwt
 import json
+import os
 import urllib.request
 from functools import lru_cache
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt.algorithms import ECAlgorithm
 
-SUPABASE_URL = "https://hdomxuirontyppniwgjt.supabase.co"
+# Read from environment — falls back to this project's Supabase URL for local dev
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://hdomxuirontyppniwgjt.supabase.co")
 JWKS_URL = f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json"
 
 bearer_scheme = HTTPBearer()
