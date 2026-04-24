@@ -5,7 +5,7 @@ import { supabase } from '../supabaseClient';
 // In production, set VITE_BACKEND_URL to your deployed backend (e.g. https://your-api.onrender.com)
 // In development, it falls back to localhost:8000
 const API = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_URL || "https://retail-customer-segmentation.onrender.com",
   timeout: 30000,
 });
 
