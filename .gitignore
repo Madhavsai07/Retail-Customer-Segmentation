@@ -6,11 +6,6 @@ venv/
 .env
 *.db
 
-# ── ML Artifacts (heavy generated files) ─────────────
-*.pkl
-*.parquet
-artifacts/
-
 # ── Node / Frontend ───────────────────────────────────
 node_modules/
 dist/
@@ -20,9 +15,15 @@ dist/
 *.log
 dev.log
 
+# ── Dataset (large raw file — download separately) ────
+backend/data/online_retail.xlsx
+
 # ── OS ────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 
 # ── IDE ───────────────────────────────────────────────
 .vscode/
+
+# NOTE: backend/artifacts/ is intentionally NOT ignored.
+# Precomputed ML artifacts are included in the repo for demo/deployment purposes.
