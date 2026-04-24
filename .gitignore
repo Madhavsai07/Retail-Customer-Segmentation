@@ -1,0 +1,28 @@
+# ── Python ────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.env
+*.db
+
+# ── ML Artifacts (heavy generated files) ─────────────
+*.pkl
+*.parquet
+artifacts/
+
+# ── Node / Frontend ───────────────────────────────────
+node_modules/
+dist/
+.vite/
+
+# ── Logs ──────────────────────────────────────────────
+*.log
+dev.log
+
+# ── OS ────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ───────────────────────────────────────────────
+.vscode/
