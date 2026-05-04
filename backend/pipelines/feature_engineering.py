@@ -35,11 +35,7 @@ def compute_rfm(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def engineer_features(df: pd.DataFrame, output_dir: Path = None) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Returns:
-        rfm_raw: unscaled RFM DataFrame (stored for display)
-        rfm_scaled: scaled feature matrix (used for clustering)
-    """
+
     rfm_raw = compute_rfm(df)
 
     # Log1p transform to reduce skew

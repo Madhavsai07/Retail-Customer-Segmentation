@@ -1,7 +1,4 @@
-"""
-data_ingestion.py
-Loads the Online Retail dataset, validates schema, and returns raw DataFrame.
-"""
+""" data_ingestion.py """
 
 import logging
 import pandas as pd

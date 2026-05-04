@@ -1,14 +1,6 @@
 """
 api_layer.py
 All REST API routes for the Retail Customer Segmentation app.
-
-Public endpoints (no auth required):
-  GET /health, /metrics, /segment
-
-Protected endpoints (Supabase JWT required):
-  GET /personas, /customer/{id}, /cluster/{id}/customers, /customer/{id}/transactions
-
-Data is read from the global `data` dict populated by main.py on startup.
 """
 
 import logging

@@ -1,7 +1,6 @@
 """
 data_cleaning.py
-Cleans raw transaction data: removes invalid rows, engineers TotalPrice,
-handles outliers via log-transform capping, and saves a Parquet artifact.
+
 """
 
 import logging

@@ -302,28 +302,37 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="ml-auto flex items-center gap-3">
-            {/* K Selector */}
-            <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
-              {K_OPTIONS.map((k) => (
-                <button
-                  key={k}
-                  id={`k-btn-${k}`}
-                  onClick={() => setSelectedK(k)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${selectedK === k
-                    ? 'bg-primary-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-white hover:shadow-sm'
+            {/* Segment Group Selector */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest hidden sm:block">Segments</span>
+              <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+                {K_OPTIONS.map((k) => (
+                  <button
+                    key={k}
+                    id={`k-btn-${k}`}
+                    onClick={() => setSelectedK(k)}
+                    title={`View customers split into ${k} behaviour groups`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                      selectedK === k
+                        ? 'bg-primary-600 text-white shadow-sm scale-105'
+                        : 'text-gray-500 hover:bg-white hover:shadow-sm hover:text-gray-800'
                     }`}
-                >
-                  K={k}
-                  {k === metrics?.best_k && (
-                    <span className="ml-1 text-[9px] opacity-80">★</span>
-                  )}
-                </button>
-              ))}
+                  >
+                    <FiLayers size={11} className={selectedK === k ? 'opacity-90' : 'opacity-50'} />
+                    {k} Groups
+                    {k === metrics?.best_k && (
+                      <span className={`text-[9px] ${
+                        selectedK === k ? 'text-yellow-300' : 'text-amber-400'
+                      }`} title="Recommended — best silhouette score">★</span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
             {silhouette[selectedK] && (
-              <span className="bg-primary-50 border border-primary-100 text-primary-700 text-xs font-medium px-3 py-1.5 rounded-xl">
-                Silhouette: {silhouette[selectedK]}
+              <span className="bg-primary-50 border border-primary-100 text-primary-700 text-xs font-medium px-3 py-1.5 rounded-xl flex items-center gap-1">
+                <FiActivity size={11} />
+                Score: {silhouette[selectedK]}
               </span>
             )}
             <button
@@ -486,12 +495,12 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between mb-5">
                     <div>
                       <h2 className="text-base font-semibold text-gray-800">Customer Personas</h2>
-                      <p className="text-xs text-gray-400 mt-0.5">K={selectedK} segments with tailored recommendations</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{selectedK} distinct behaviour groups · tailored recommendations per segment</p>
                     </div>
                   </div>
                   {personas.length === 0 ? (
                     <div className="flex items-center justify-center h-32 card text-gray-400 text-sm gap-2">
-                      <FiAlertTriangle /> No persona data available for K={selectedK}
+                      <FiAlertTriangle /> No persona data available for {selectedK} groups
                     </div>
                   ) : (
                     <div className={`grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-${selectedK}`}>
