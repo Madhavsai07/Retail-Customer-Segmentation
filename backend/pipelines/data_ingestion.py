@@ -25,7 +25,6 @@ def load_data(path: Path = DATA_PATH) -> pd.DataFrame:
     df = pd.read_excel(path, engine="openpyxl")
     logger.info(f"Raw dataset loaded — rows: {len(df):,}, columns: {list(df.columns)}")
 
-    # Validate schema
     missing = [col for col in REQUIRED_COLUMNS if col not in df.columns]
     if missing:
         raise ValueError(f"Missing required columns: {missing}")

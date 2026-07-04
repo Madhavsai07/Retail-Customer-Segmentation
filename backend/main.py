@@ -3,14 +3,14 @@ main.py
 FastAPI application entry point.
 
 Startup strategy:
-  - IF precomputed artifacts exist → load them directly (fast, no dataset needed)
-  - IF artifacts are missing → run the full ML pipeline from the raw dataset
-  - IF artifacts are missing AND dataset is missing → warn and start with empty state
+  - Load admin@retail.com precomputed artifacts if they exist
+  - Otherwise, run the pipeline on the sample retail dataset if it exists
 """
 
 import json
 import logging
 import os
+import threading
 from pathlib import Path
 
 import numpy as np
@@ -24,12 +24,10 @@ from api_layer import router
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
-BASE_DIR      = Path(__file__).resolve().parent
-ARTIFACTS_DIR = BASE_DIR / "artifacts" / "admin@retail.com"
-DATASET_PATH  = BASE_DIR / "data" / "online_retail.xlsx"
+BASE_DIR           = Path(__file__).resolve().parent
+ARTIFACTS_DIR_BASE = BASE_DIR / "artifacts"
+DATASET_PATH       = BASE_DIR / "data" / "online_retail.xlsx"
 
-# Required artifact files for a "pre-loaded" startup
 REQUIRED_ARTIFACTS = [
     "rfm_features.parquet",
     "rfm_scaled.parquet",
@@ -37,152 +35,180 @@ REQUIRED_ARTIFACTS = [
     "personas.json",
 ]
 
-# ── Global data store ─────────────────────────────────────────────────────────
-data = {}
+user_data = {}
+pipeline_status = {}
 
-# ── FastAPI app ───────────────────────────────────────────────────────────────
 app = FastAPI(
     title="Retail Customer Segmentation API",
     description="RFM + K-Means clustering results exposed via REST API",
     version="1.0.0",
 )
 
-# ── CORS ─────────────────────────────────────────────────────────────────────
-# Allowing all origins for now so the Vercel frontend can reach this backend.
-# To restrict later, set ALLOWED_ORIGINS env var and replace "*" with the list.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=False,  # must be False when allow_origins=["*"]
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
 app.include_router(router)
 
 
-# ── Helper: check if all artifacts exist ──────────────────────────────────────
-def artifacts_exist() -> bool:
-    """Return True only when every required artifact file is present on disk."""
-    return all((ARTIFACTS_DIR / f).exists() for f in REQUIRED_ARTIFACTS)
-
-
-# ── Helper: load precomputed artifacts into memory ────────────────────────────
-def load_artifacts() -> None:
-    """
-    Load all precomputed ML artifacts from disk into the global `data` dict.
-    Runs K-Means and silhouette scoring in-memory (fast, uses parquet inputs).
-    """
+def load_user_artifacts(email: str) -> dict:
+    """Load all precomputed ML artifacts from disk for a specific user."""
     from pipelines.clustering_engine import run_clustering
     from pipelines.evaluation import evaluate_models
 
-    logger.info("Loading precomputed artifacts from disk...")
+    user_dir = ARTIFACTS_DIR_BASE / email
+    if not all((user_dir / f).exists() for f in REQUIRED_ARTIFACTS):
+        return None
 
-    rfm_raw    = pd.read_parquet(ARTIFACTS_DIR / "rfm_features.parquet")
-    rfm_scaled = pd.read_parquet(ARTIFACTS_DIR / "rfm_scaled.parquet")
+    try:
+        logger.info(f"Loading precomputed artifacts from disk for {email}...")
 
-    cleaned_data = pd.read_parquet(ARTIFACTS_DIR / "cleaned_data.parquet")
-    cleaned_data["InvoiceDate"] = pd.to_datetime(cleaned_data["InvoiceDate"])
+        rfm_raw    = pd.read_parquet(user_dir / "rfm_features.parquet")
+        rfm_scaled = pd.read_parquet(user_dir / "rfm_scaled.parquet")
 
-    with open(ARTIFACTS_DIR / "personas.json") as f:
-        all_personas = json.load(f)
+        cleaned_data = pd.read_parquet(user_dir / "cleaned_data.parquet")
+        cleaned_data["InvoiceDate"] = pd.to_datetime(cleaned_data["InvoiceDate"])
 
-    clustering_results        = run_clustering(rfm_scaled)
-    best_k, silhouette_scores = evaluate_models(rfm_scaled, clustering_results)
+        with open(user_dir / "personas.json") as f:
+            all_personas = json.load(f)
 
-    feature_cols = ["Recency", "Frequency", "Monetary"]
-    scaler = MinMaxScaler()
-    scaler.fit(np.log1p(rfm_raw[feature_cols].values))
+        k_vals = list(range(3, 7))
+        clustering_results = run_clustering(rfm_scaled, k_values=k_vals)
+        best_k, silhouette_scores = evaluate_models(rfm_scaled, clustering_results)
 
-    data["rfm_raw"]            = rfm_raw
-    data["rfm_scaled"]         = rfm_scaled
-    data["cleaned_data"]       = cleaned_data
-    data["clustering_results"] = clustering_results
-    data["best_k"]             = best_k
-    data["silhouette_scores"]  = silhouette_scores
-    data["all_personas"]       = all_personas
-    data["scaler"]             = scaler
+        feature_cols = ["Recency", "Frequency", "Monetary"]
+        scaler = MinMaxScaler()
+        scaler.fit(np.log1p(rfm_raw[feature_cols].values))
 
-    logger.info(f"✅ Artifacts loaded successfully — {len(rfm_raw)} customers | Best K={best_k}")
+        logger.info(f"✅ Loaded {email} artifacts: {len(rfm_raw)} customers | Best K={best_k}")
+        return {
+            "rfm_raw": rfm_raw,
+            "rfm_scaled": rfm_scaled,
+            "cleaned_data": cleaned_data,
+            "clustering_results": clustering_results,
+            "best_k": best_k,
+            "silhouette_scores": silhouette_scores,
+            "all_personas": all_personas,
+            "scaler": scaler,
+        }
+    except Exception as e:
+        logger.error(f"❌ Failed to load artifacts for {email}: {e}")
+        return None
 
 
-# ── Helper: run full ML pipeline and save artifacts ───────────────────────────
-def run_pipeline() -> None:
-    """
-    Execute the full ML pipeline from the raw dataset.
-    Saves every artifact to disk so the next startup uses load_artifacts() instead.
-    """
-    from pipelines.data_ingestion    import load_data
+def get_user_data(email: str) -> dict:
+    """Get loaded data for a user, or try loading it from disk."""
+    if email not in user_data:
+        ud = load_user_artifacts(email)
+        if ud:
+            user_data[email] = ud
+    return user_data.get(email)
+
+
+def run_user_pipeline_task(email: str, df: pd.DataFrame):
+    """Run full ML pipeline for a user and cache the results."""
     from pipelines.data_cleaning     import clean_data
     from pipelines.feature_engineering import engineer_features
     from pipelines.clustering_engine import run_clustering, save_best_model
     from pipelines.evaluation        import evaluate_models
     from pipelines.persona_generator import generate_personas
 
-    logger.info("Running full ML pipeline...")
+    user_dir = ARTIFACTS_DIR_BASE / email
+    user_dir.mkdir(parents=True, exist_ok=True)
 
-    raw_df    = load_data(DATASET_PATH)
-    clean_df  = clean_data(raw_df, output_dir=ARTIFACTS_DIR)
+    try:
+        pipeline_status[email] = {
+            "status": "running",
+            "step": "Cleaning data...",
+            "progress": 20,
+            "error": None,
+        }
 
-    rfm_raw, rfm_scaled = engineer_features(clean_df, output_dir=ARTIFACTS_DIR)
+        clean_df, cleaning_summary = clean_data(df, output_dir=user_dir)
+        pipeline_status[email]["step"] = "Computing RFM features..."
+        pipeline_status[email]["progress"] = 40
+        pipeline_status[email]["cleaning_summary"] = cleaning_summary
 
-    clustering_results        = run_clustering(rfm_scaled)
-    best_k, silhouette_scores = evaluate_models(rfm_scaled, clustering_results)
+        rfm_raw, rfm_scaled = engineer_features(clean_df, output_dir=user_dir)
+        pipeline_status[email]["step"] = "Finding optimal clusters..."
+        pipeline_status[email]["progress"] = 60
 
-    save_best_model(clustering_results, best_k, output_dir=ARTIFACTS_DIR)
+        k_vals = list(range(3, 7))
+        clustering_results = run_clustering(rfm_scaled, k_values=k_vals)
+        best_k, silhouette_scores = evaluate_models(rfm_scaled, clustering_results)
+        
+        inertia_vals = [clustering_results[k]["inertia"] for k in k_vals]
+        silhouette_vals = [silhouette_scores[k] for k in k_vals]
+        
+        pipeline_status[email]["inertia_values"] = inertia_vals
+        pipeline_status[email]["silhouette_values"] = silhouette_vals
+        pipeline_status[email]["optimal_k"] = best_k
 
-    # generate_personas saves personas.json and returns list for best_k
-    all_personas_best = generate_personas(
-        rfm_raw, clustering_results, best_k, output_dir=ARTIFACTS_DIR
-    )
+        pipeline_status[email]["step"] = "Training K-Means model..."
+        pipeline_status[email]["progress"] = 80
+        save_best_model(clustering_results, best_k, output_dir=user_dir)
 
-    # Re-build the full dict keyed by k (load from newly saved file)
-    with open(ARTIFACTS_DIR / "personas.json") as f:
-        all_personas = json.load(f)
+        pipeline_status[email]["step"] = "Generating personas..."
+        pipeline_status[email]["progress"] = 90
+        generate_personas(rfm_raw, clustering_results, best_k, output_dir=user_dir)
 
-    feature_cols = ["Recency", "Frequency", "Monetary"]
-    scaler = MinMaxScaler()
-    scaler.fit(np.log1p(rfm_raw[feature_cols].values))
+        with open(user_dir / "personas.json") as f:
+            all_personas = json.load(f)
 
-    data["rfm_raw"]            = rfm_raw
-    data["rfm_scaled"]         = rfm_scaled
-    data["cleaned_data"]       = clean_df
-    data["clustering_results"] = clustering_results
-    data["best_k"]             = best_k
-    data["silhouette_scores"]  = silhouette_scores
-    data["all_personas"]       = all_personas
-    data["scaler"]             = scaler
+        feature_cols = ["Recency", "Frequency", "Monetary"]
+        scaler = MinMaxScaler()
+        scaler.fit(np.log1p(rfm_raw[feature_cols].values))
 
-    logger.info(f"✅ Pipeline executed successfully — {len(rfm_raw)} customers | Best K={best_k}")
+        user_data[email] = {
+            "rfm_raw": rfm_raw,
+            "rfm_scaled": rfm_scaled,
+            "cleaned_data": clean_df,
+            "clustering_results": clustering_results,
+            "best_k": best_k,
+            "silhouette_scores": silhouette_scores,
+            "all_personas": all_personas,
+            "scaler": scaler,
+        }
+
+        pipeline_status[email]["status"] = "complete"
+        pipeline_status[email]["step"] = "Analysis complete!"
+        pipeline_status[email]["progress"] = 100
+
+    except Exception as e:
+        import traceback
+        tb = traceback.format_exc()
+        logger.error(f"❌ Error running pipeline for {email}: {e}\n{tb}")
+        pipeline_status[email] = {
+            "status": "error",
+            "step": "Error during pipeline run",
+            "progress": 0,
+            "error": str(e),
+        }
 
 
-# ── Startup event ─────────────────────────────────────────────────────────────
 @app.on_event("startup")
 def startup_event():
     logger.info("=== RetailIQ Backend Starting ===")
 
-    if artifacts_exist():
-        # Fast path: artifacts already on disk
-        logger.info("Precomputed artifacts found. Skipping pipeline...")
-        try:
-            load_artifacts()
-        except Exception as e:
-            logger.error(f"❌ Failed to load artifacts: {e}")
-
+    admin_data = load_user_artifacts("admin@retail.com")
+    if admin_data:
+        user_data["admin@retail.com"] = admin_data
+        logger.info("✅ Preloaded admin@retail.com artifacts.")
     else:
-        # Slow path: need to build artifacts from dataset
-        logger.warning("Artifacts not found. Attempting to run ML pipeline...")
-
-        if not DATASET_PATH.exists():
-            logger.warning(
-                f"⚠️  Dataset missing at: {DATASET_PATH}. "
-                "Cannot run pipeline. Backend will start with empty state — "
-                "APIs will return 503 until artifacts are provided."
-            )
-            return  # Start anyway, don't crash
-
-        try:
-            run_pipeline()
-        except Exception as e:
-            logger.error(f"❌ Pipeline execution failed: {e}")
+        logger.warning("admin@retail.com artifacts not found.")
+        if DATASET_PATH.exists():
+            logger.info(f"Running pipeline synchronously for admin@retail.com using: {DATASET_PATH}")
+            try:
+                if DATASET_PATH.suffix == ".xlsx":
+                    df = pd.read_excel(DATASET_PATH)
+                else:
+                    df = pd.read_csv(DATASET_PATH)
+                run_user_pipeline_task("admin@retail.com", df)
+            except Exception as e:
+                logger.error(f"❌ Failed to run startup pipeline: {e}")
+        else:
+            logger.warning("No default dataset found. Admin dashboard will start empty.")

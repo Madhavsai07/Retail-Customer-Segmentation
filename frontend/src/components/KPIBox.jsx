@@ -12,19 +12,6 @@ const TREND_COLORS = {
   neutral: 'text-gray-500 bg-gray-100',
 };
 
-/**
- * KPIBox — displays a single KPI metric with icon, value, label, and optional trend.
- *
- * Props:
- *   title       string
- *   value       string | number
- *   subtitle    string (optional)
- *   icon        ReactNode
- *   iconBg      string (Tailwind class, e.g. "bg-indigo-100")
- *   iconColor   string (Tailwind class, e.g. "text-indigo-600")
- *   trend       'up' | 'down' | 'neutral' (optional)
- *   trendLabel  string (optional, e.g. "+12% vs last month")
- */
 export default function KPIBox({
   title,
   value,

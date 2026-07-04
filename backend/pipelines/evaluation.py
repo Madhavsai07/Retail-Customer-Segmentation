@@ -38,14 +38,11 @@ def evaluate_models(rfm_scaled: pd.DataFrame, results: dict) -> tuple[int, dict]
 
 
 if __name__ == "__main__":
-    # To run this script directly:
-    # Set PYTHONPATH=.. (if in pipelines/) or run as 'python pipelines/evaluation.py' from backend/
     try:
         from clustering_engine import run_clustering
     except ImportError:
         from pipelines.clustering_engine import run_clustering
 
-    # Try to find a user folder (e.g., admin@retail.com) in artifacts
     user_dirs = [d for d in ARTIFACTS_DIR.iterdir() if d.is_dir()]
     target_dir = user_dirs[0] if user_dirs else ARTIFACTS_DIR
     

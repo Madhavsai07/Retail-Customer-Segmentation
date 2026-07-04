@@ -1,16 +1,11 @@
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
 
-// ── Axios instance ────────────────────────────────────────────────────────────
-// In production, set VITE_BACKEND_URL to your deployed backend (e.g. https://your-api.onrender.com)
-// In development, it falls back to localhost:8000
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "https://retail-customer-segmentation.onrender.com",
   timeout: 30000,
 });
 
-
-// Automatically attach the Supabase JWT (access token from the active session)
 API.interceptors.request.use(async (req) => {
   const { data: { session } } = await supabase.auth.getSession();
   if (session?.access_token) {
@@ -19,7 +14,6 @@ API.interceptors.request.use(async (req) => {
   return req;
 });
 
-// Log errors to the browser console
 API.interceptors.response.use(
   (res) => res,
   (err) => {
@@ -28,9 +22,6 @@ API.interceptors.response.use(
   }
 );
 
-// ── API functions ─────────────────────────────────────────────────────────────
-
-// Dashboard data
 export const checkHealth = () => API.get('/health');
 export const getMetrics = () => API.get('/metrics');
 export const getSegments = (k = 4) => API.get(`/segment?k=${k}`);
@@ -39,8 +30,12 @@ export const getCustomer = (id, k = 4) => API.get(`/customer/${id}?k=${k}`);
 export const getClusterCustomers = (clusterId, k = 4) => API.get(`/cluster/${clusterId}/customers?k=${k}`);
 export const getCustomerTransactions = (id) => API.get(`/customer/${id}/transactions`);
 
-// ── Fallback demo data (shown when the backend is offline) ────────────────────
-// This lets the dashboard still display something useful if the server is down.
+export const getAnalysisStatus = () => API.get('/analysis/status');
+export const getPipelineStatus = () => API.get('/pipeline/status');
+export const uploadDataset     = (formData) => API.post('/upload', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+});
+export const downloadFile      = (type) => API.get(`/download/${type}`, { responseType: 'blob' });
 
 export const DUMMY_METRICS = {
   total_customers: 4338,
@@ -72,7 +67,6 @@ export const DUMMY_CLUSTER_SUMMARY = {
   ],
 };
 
-// Random scatter data for the demo (200 sample customers)
 const baseScatter = Array.from({ length: 200 }, (_, i) => ({
   CustomerID: 10000 + i,
   Recency: Math.round(Math.random() * 365),
@@ -167,7 +161,6 @@ export const DUMMY_PERSONAS = {
   ],
 };
 
-// Generate a fake customer profile for the demo (when backend is offline)
 export const getDummyCustomer = (id, k = 4) => {
   const cluster_id = Math.floor(Math.random() * k);
   const persona = DUMMY_PERSONAS[k]?.[cluster_id];
@@ -182,7 +175,6 @@ export const getDummyCustomer = (id, k = 4) => {
 };
 
 export const getDummyClusterCustomers = (clusterId, k = 4) => {
-  // Return a mock list of exactly matching the shape returned by the backend
   const customers = DUMMY_SCATTER[k]
     .filter(c => c.Cluster === clusterId)
     .sort((a, b) => b.Monetary - a.Monetary)

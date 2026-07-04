@@ -20,8 +20,14 @@ def compute_rfm(df: pd.DataFrame) -> pd.DataFrame:
     snapshot_date = df["InvoiceDate"].max() + pd.Timedelta(days=1)
     logger.info(f"Snapshot date for recency: {snapshot_date.date()}")
 
+    df_rfm = df.copy()
+    if "InvoiceNo" not in df_rfm.columns:
+        logger.info("InvoiceNo column missing; grouping by CustomerID and InvoiceDate date to generate frequency.")
+        dates = pd.to_datetime(df_rfm["InvoiceDate"]).dt.date
+        df_rfm["InvoiceNo"] = df_rfm.groupby(["CustomerID", dates]).ngroup().astype(str)
+
     rfm = (
-        df.groupby("CustomerID")
+        df_rfm.groupby("CustomerID")
         .agg(
             Recency=("InvoiceDate", lambda x: (snapshot_date - x.max()).days),
             Frequency=("InvoiceNo", "nunique"),
@@ -29,6 +35,9 @@ def compute_rfm(df: pd.DataFrame) -> pd.DataFrame:
         )
         .reset_index()
     )
+
+    if "Monetary" in rfm.columns:
+        rfm["Monetary"] = rfm["Monetary"].round(2)
 
     logger.info(f"RFM computed for {len(rfm):,} customers")
     return rfm
@@ -38,17 +47,14 @@ def engineer_features(df: pd.DataFrame, output_dir: Path = None) -> tuple[pd.Dat
 
     rfm_raw = compute_rfm(df)
 
-    # Log1p transform to reduce skew
     rfm_scaled = rfm_raw.copy()
     for col in ["Recency", "Frequency", "Monetary"]:
         rfm_scaled[col] = np.log1p(rfm_scaled[col])
 
-    # MinMax scale to [0, 1]
     scaler = MinMaxScaler()
     feature_cols = ["Recency", "Frequency", "Monetary"]
     rfm_scaled[feature_cols] = scaler.fit_transform(rfm_scaled[feature_cols])
 
-    # Save both
     if output_dir:
         output_dir.mkdir(parents=True, exist_ok=True)
         rfm_raw.to_parquet(output_dir / "rfm_features.parquet", index=False)
@@ -59,14 +65,4 @@ def engineer_features(df: pd.DataFrame, output_dir: Path = None) -> tuple[pd.Dat
 
 
 if __name__ == "__main__":
-    from data_ingestion import load_data
-    from data_cleaning import clean_data
-
-    # Try to find a user folder (e.g., admin@retail.com) in artifacts for output
-    user_dirs = [d for d in ARTIFACTS_DIR.iterdir() if d.is_dir()]
-    target_dir = user_dirs[0] if user_dirs else ARTIFACTS_DIR
-    
-    raw = load_data()
-    clean = clean_data(raw)
-    rfm_raw, rfm_scaled = engineer_features(clean, output_dir=target_dir)
-    print(rfm_raw.describe())
+    pass

@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 ARTIFACTS_DIR = Path(__file__).resolve().parents[1] / "artifacts"
 
-# Persona definitions: ranked order by desirability
 PERSONA_CATALOG = [
     {
         "name": "Champions",
@@ -84,7 +83,6 @@ def _rank_clusters(rfm_raw: pd.DataFrame, labels: list[int], k: int) -> dict:
         cluster_size=("CustomerID", "count"),
     )
 
-    # Composite score: high freq + high monetary − recency (lower recency = better)
     r_max = summary["avg_recency"].max()
     summary["score"] = (
         (r_max - summary["avg_recency"]) / r_max
@@ -128,7 +126,6 @@ def generate_personas(rfm_raw: pd.DataFrame, clustering_results: dict, best_k: i
 
         all_personas[str(k)] = personas
 
-    # Save
     if output_dir:
         output_dir.mkdir(parents=True, exist_ok=True)
         out_path = output_dir / "personas.json"
@@ -140,8 +137,6 @@ def generate_personas(rfm_raw: pd.DataFrame, clustering_results: dict, best_k: i
 
 
 if __name__ == "__main__":
-    # To run this script directly:
-    # Set PYTHONPATH=.. or run as 'python pipelines/persona_generator.py' from backend/
     try:
         from clustering_engine import run_clustering
         from evaluation import evaluate_models
@@ -149,7 +144,6 @@ if __name__ == "__main__":
         from pipelines.clustering_engine import run_clustering
         from pipelines.evaluation import evaluate_models
 
-    # Try to find a user folder (e.g., admin@retail.com) in artifacts
     user_dirs = [d for d in ARTIFACTS_DIR.iterdir() if d.is_dir()]
     target_dir = user_dirs[0] if user_dirs else ARTIFACTS_DIR
     

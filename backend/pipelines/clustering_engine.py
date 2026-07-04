@@ -53,7 +53,6 @@ def save_best_model(results: dict, best_k: int, output_dir: Path = None) -> None
 
 
 if __name__ == "__main__":
-    # Try to find a user folder (e.g., admin@retail.com) in artifacts
     user_dirs = [d for d in ARTIFACTS_DIR.iterdir() if d.is_dir()]
     target_dir = user_dirs[0] if user_dirs else ARTIFACTS_DIR
     

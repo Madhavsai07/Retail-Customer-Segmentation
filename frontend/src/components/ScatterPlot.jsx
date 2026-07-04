@@ -22,15 +22,7 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-/**
- * ScatterPlot — Recharts scatter: Recency (X) vs Monetary (Y), coloured by Cluster.
- *
- * Props:
- *   data  Array<{CustomerID, Recency, Frequency, Monetary, Cluster}>
- *   k     number  (to slice correct clusters)
- */
 export default function ScatterPlot({ data = [], k = 4 }) {
-  // Split data by cluster
   const clusters = Array.from({ length: k }, (_, i) =>
     data.filter((d) => d.Cluster === i)
   );
@@ -80,7 +72,7 @@ export default function ScatterPlot({ data = [], k = 4 }) {
         </ScatterChart>
       </ResponsiveContainer>
 
-      {/* Cluster legend */}
+
       <div className="flex flex-wrap gap-3 mt-2">
         {Array.from({ length: k }, (_, i) => (
           <div key={i} className="flex items-center gap-1.5 text-xs text-gray-600">

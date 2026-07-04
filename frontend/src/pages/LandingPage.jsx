@@ -34,7 +34,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white font-sans">
-      {/* ── Navbar ─────────────────────────────────────────────────────── */}
       <nav className="fixed top-0 inset-x-0 z-50 glass border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -52,9 +51,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* ── Hero ───────────────────────────────────────────────────────── */}
       <section className="pt-32 pb-24 px-6 bg-gradient-to-br from-gray-50 via-primary-50/40 to-accent-50/30 relative overflow-hidden">
-        {/* Decorative blobs */}
         <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary-200/30 rounded-full blur-3xl" />
         <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-accent-200/30 rounded-full blur-3xl" />
 
@@ -88,7 +85,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Features ───────────────────────────────────────────────────── */}
       <section id="features" className="py-20 px-6 max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900">Core Features</h2>
@@ -107,11 +103,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-
-
-
-
-      {/* ── Footer ─────────────────────────────────────────────────────── */}
       <footer className="border-t border-gray-100 py-10 px-6 text-center">
         <div className="flex items-center justify-center gap-2 mb-3">
           <div className="w-6 h-6 bg-gradient-to-br from-primary-600 to-accent-500 rounded-md flex items-center justify-center">

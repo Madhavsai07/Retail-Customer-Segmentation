@@ -17,6 +17,8 @@ dev.log
 
 # ── Dataset (large raw file — download separately) ────
 backend/data/online_retail.xlsx
+Online Retail.xlsx
+*.csv
 
 # ── OS ────────────────────────────────────────────────
 .DS_Store

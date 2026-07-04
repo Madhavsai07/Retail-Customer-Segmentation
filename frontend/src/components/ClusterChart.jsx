@@ -21,12 +21,6 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-/**
- * ClusterChart — Bar chart showing customer count or % per cluster.
- *
- * Props:
- *   data  Array<{Cluster, count, pct?}>
- */
 export default function ClusterChart({ data = [], personas = [] }) {
   const total = data.reduce((s, d) => s + (d.count || 0), 0);
 
@@ -76,7 +70,7 @@ export default function ClusterChart({ data = [], personas = [] }) {
         </BarChart>
       </ResponsiveContainer>
 
-      {/* Legend */}
+
       <div className="flex flex-wrap gap-3 mt-3">
         {chartData.map((d, idx) => (
           <div key={idx} className="flex items-center gap-1.5 text-xs text-gray-600">

@@ -17,7 +17,6 @@ export default function SignupPage() {
     e.preventDefault();
     setError('');
 
-    // Client-side validation
     if (!name.trim()) { setError('Name is required.'); return; }
     if (!email.trim()) { setError('Email is required.'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Enter a valid email address.'); return; }
@@ -52,12 +51,10 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/50 to-accent-50/30 flex items-center justify-center px-4">
-      {/* Decorative blobs */}
       <div className="fixed -top-40 -right-40 w-96 h-96 bg-primary-200/20 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed -bottom-40 -left-40 w-96 h-96 bg-accent-200/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10 animate-slide-up pb-10 pt-10">
-        {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-accent-500 rounded-xl flex items-center justify-center shadow-lg">
@@ -69,7 +66,6 @@ export default function SignupPage() {
           <p className="text-gray-500 text-sm mt-1">Join us to start analyzing your customer segments</p>
         </div>
 
-        {/* Card */}
         <div className="card shadow-xl border-0">
           {error && (
             <div className={`flex items-center gap-2.5 border text-sm rounded-xl px-4 py-3 mb-5 ${
@@ -81,7 +77,6 @@ export default function SignupPage() {
           )}
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
-            {/* Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="name">
                 Full name
@@ -100,7 +95,6 @@ export default function SignupPage() {
               </div>
             </div>
 
-            {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="email">
                 Email address
@@ -119,7 +113,6 @@ export default function SignupPage() {
               </div>
             </div>
 
-            {/* Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="password">
                 Password
@@ -145,7 +138,6 @@ export default function SignupPage() {
               </div>
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
@@ -164,7 +156,6 @@ export default function SignupPage() {
             </button>
           </form>
 
-          {/* Login link */}
           <div className="mt-5 pt-5 border-t border-gray-100 text-center">
             <p className="text-sm text-gray-600">
               Already have an account?{' '}

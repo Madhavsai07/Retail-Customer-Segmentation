@@ -1,0 +1,280 @@
+{
+  "3": [
+    {
+      "cluster_id": 0,
+      "persona_name": "Occasional Buyers",
+      "color": "#10b981",
+      "description": "Low-Frequency, Moderate-Value Customers",
+      "cluster_size": 49,
+      "avg_recency": 173.4,
+      "avg_frequency": 2.3,
+      "avg_monetary": 2969.76,
+      "recommendations": [
+        "Trigger automated reminders based on past purchase cycles",
+        "Send personalized recommendations based on browsing history",
+        "Offer limited-time bundle deals to increase basket size"
+      ]
+    },
+    {
+      "cluster_id": 1,
+      "persona_name": "Champions",
+      "color": "#6366f1",
+      "description": "High-Value & Highly Engaged Customers",
+      "cluster_size": 49,
+      "avg_recency": 10.8,
+      "avg_frequency": 5.3,
+      "avg_monetary": 7519.45,
+      "recommendations": [
+        "Invite to private beta launches and VIP events",
+        "Offer premium tier customer service",
+        "Request User Generated Content (UGC) and referrals"
+      ]
+    },
+    {
+      "cluster_id": 2,
+      "persona_name": "Loyal Customers",
+      "color": "#06b6d4",
+      "description": "Frequent & Consistent Customers",
+      "cluster_size": 99,
+      "avg_recency": 87.0,
+      "avg_frequency": 6.1,
+      "avg_monetary": 9187.38,
+      "recommendations": [
+        "Recommend high-margin complementary products (Cross-sell)",
+        "Offer auto-replenishment subscriptions",
+        "Provide early access to major seasonal sales"
+      ]
+    }
+  ],
+  "4": [
+    {
+      "cluster_id": 0,
+      "persona_name": "At Risk",
+      "color": "#f59e0b",
+      "description": "High-Recency, Low-Engagement Customers",
+      "cluster_size": 33,
+      "avg_recency": 182.6,
+      "avg_frequency": 1.9,
+      "avg_monetary": 2114.5,
+      "recommendations": [
+        "Send targeted 'We miss you' emails with high discount codes",
+        "Promote top-rated trending items to spark renewed interest",
+        "Request feedback with an incentive for survey completion"
+      ]
+    },
+    {
+      "cluster_id": 1,
+      "persona_name": "Champions",
+      "color": "#6366f1",
+      "description": "High-Value & Highly Engaged Customers",
+      "cluster_size": 49,
+      "avg_recency": 58.8,
+      "avg_frequency": 7.8,
+      "avg_monetary": 11933.38,
+      "recommendations": [
+        "Invite to private beta launches and VIP events",
+        "Offer premium tier customer service",
+        "Request User Generated Content (UGC) and referrals"
+      ]
+    },
+    {
+      "cluster_id": 2,
+      "persona_name": "Occasional Buyers",
+      "color": "#10b981",
+      "description": "Low-Frequency, Moderate-Value Customers",
+      "cluster_size": 75,
+      "avg_recency": 111.9,
+      "avg_frequency": 4.3,
+      "avg_monetary": 6314.5,
+      "recommendations": [
+        "Trigger automated reminders based on past purchase cycles",
+        "Send personalized recommendations based on browsing history",
+        "Offer limited-time bundle deals to increase basket size"
+      ]
+    },
+    {
+      "cluster_id": 3,
+      "persona_name": "Loyal Customers",
+      "color": "#06b6d4",
+      "description": "Frequent & Consistent Customers",
+      "cluster_size": 40,
+      "avg_recency": 8.5,
+      "avg_frequency": 5.2,
+      "avg_monetary": 7385.51,
+      "recommendations": [
+        "Recommend high-margin complementary products (Cross-sell)",
+        "Offer auto-replenishment subscriptions",
+        "Provide early access to major seasonal sales"
+      ]
+    }
+  ],
+  "5": [
+    {
+      "cluster_id": 0,
+      "persona_name": "At Risk",
+      "color": "#f59e0b",
+      "description": "High-Recency, Low-Engagement Customers",
+      "cluster_size": 31,
+      "avg_recency": 140.8,
+      "avg_frequency": 2.8,
+      "avg_monetary": 4467.01,
+      "recommendations": [
+        "Send targeted 'We miss you' emails with high discount codes",
+        "Promote top-rated trending items to spark renewed interest",
+        "Request feedback with an incentive for survey completion"
+      ]
+    },
+    {
+      "cluster_id": 1,
+      "persona_name": "Champions",
+      "color": "#6366f1",
+      "description": "High-Value & Highly Engaged Customers",
+      "cluster_size": 46,
+      "avg_recency": 57.2,
+      "avg_frequency": 7.9,
+      "avg_monetary": 12144.32,
+      "recommendations": [
+        "Invite to private beta launches and VIP events",
+        "Offer premium tier customer service",
+        "Request User Generated Content (UGC) and referrals"
+      ]
+    },
+    {
+      "cluster_id": 2,
+      "persona_name": "Occasional Buyers",
+      "color": "#10b981",
+      "description": "Low-Frequency, Moderate-Value Customers",
+      "cluster_size": 59,
+      "avg_recency": 102.8,
+      "avg_frequency": 4.8,
+      "avg_monetary": 6842.96,
+      "recommendations": [
+        "Trigger automated reminders based on past purchase cycles",
+        "Send personalized recommendations based on browsing history",
+        "Offer limited-time bundle deals to increase basket size"
+      ]
+    },
+    {
+      "cluster_id": 3,
+      "persona_name": "Loyal Customers",
+      "color": "#06b6d4",
+      "description": "Frequent & Consistent Customers",
+      "cluster_size": 40,
+      "avg_recency": 8.5,
+      "avg_frequency": 5.2,
+      "avg_monetary": 7385.51,
+      "recommendations": [
+        "Recommend high-margin complementary products (Cross-sell)",
+        "Offer auto-replenishment subscriptions",
+        "Provide early access to major seasonal sales"
+      ]
+    },
+    {
+      "cluster_id": 4,
+      "persona_name": "Bargain Hunters",
+      "color": "#ef4444",
+      "description": "Low recency, low frequency, low spend.",
+      "cluster_size": 21,
+      "avg_recency": 201.6,
+      "avg_frequency": 1.7,
+      "avg_monetary": 1297.66,
+      "recommendations": [
+        "Send notifications for clearance and end-of-season sales",
+        "Implement free shipping thresholds to increase AOV",
+        "Highlight product bundles to maximize inventory turnover"
+      ]
+    }
+  ],
+  "6": [
+    {
+      "cluster_id": 0,
+      "persona_name": "Bargain Hunters",
+      "color": "#ef4444",
+      "description": "Low recency, low frequency, low spend.",
+      "cluster_size": 28,
+      "avg_recency": 168.5,
+      "avg_frequency": 2.8,
+      "avg_monetary": 4216.98,
+      "recommendations": [
+        "Send notifications for clearance and end-of-season sales",
+        "Implement free shipping thresholds to increase AOV",
+        "Highlight product bundles to maximize inventory turnover"
+      ]
+    },
+    {
+      "cluster_id": 1,
+      "persona_name": "Loyal Customers",
+      "color": "#06b6d4",
+      "description": "Frequent & Consistent Customers",
+      "cluster_size": 42,
+      "avg_recency": 9.5,
+      "avg_frequency": 5.5,
+      "avg_monetary": 7766.59,
+      "recommendations": [
+        "Recommend high-margin complementary products (Cross-sell)",
+        "Offer auto-replenishment subscriptions",
+        "Provide early access to major seasonal sales"
+      ]
+    },
+    {
+      "cluster_id": 2,
+      "persona_name": "Occasional Buyers",
+      "color": "#10b981",
+      "description": "Low-Frequency, Moderate-Value Customers",
+      "cluster_size": 60,
+      "avg_recency": 96.2,
+      "avg_frequency": 4.8,
+      "avg_monetary": 6882.35,
+      "recommendations": [
+        "Trigger automated reminders based on past purchase cycles",
+        "Send personalized recommendations based on browsing history",
+        "Offer limited-time bundle deals to increase basket size"
+      ]
+    },
+    {
+      "cluster_id": 3,
+      "persona_name": "Champions",
+      "color": "#6366f1",
+      "description": "High-Value & Highly Engaged Customers",
+      "cluster_size": 41,
+      "avg_recency": 61.5,
+      "avg_frequency": 8.0,
+      "avg_monetary": 12519.76,
+      "recommendations": [
+        "Invite to private beta launches and VIP events",
+        "Offer premium tier customer service",
+        "Request User Generated Content (UGC) and referrals"
+      ]
+    },
+    {
+      "cluster_id": 4,
+      "persona_name": "At Risk",
+      "color": "#f59e0b",
+      "description": "High-Recency, Low-Engagement Customers",
+      "cluster_size": 11,
+      "avg_recency": 26.5,
+      "avg_frequency": 2.1,
+      "avg_monetary": 3253.61,
+      "recommendations": [
+        "Send targeted 'We miss you' emails with high discount codes",
+        "Promote top-rated trending items to spark renewed interest",
+        "Request feedback with an incentive for survey completion"
+      ]
+    },
+    {
+      "cluster_id": 5,
+      "persona_name": "Bargain Hunters",
+      "color": "#ef4444",
+      "description": "Low recency, low frequency, low spend.",
+      "cluster_size": 15,
+      "avg_recency": 262.4,
+      "avg_frequency": 1.7,
+      "avg_monetary": 1147.26,
+      "recommendations": [
+        "Send notifications for clearance and end-of-season sales",
+        "Implement free shipping thresholds to increase AOV",
+        "Highlight product bundles to maximize inventory turnover"
+      ]
+    }
+  ]
+}

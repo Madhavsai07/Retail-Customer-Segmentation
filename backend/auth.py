@@ -13,7 +13,6 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt.algorithms import ECAlgorithm
 
-# Read from environment — falls back to this project's Supabase URL for local dev
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://hdomxuirontyppniwgjt.supabase.co")
 JWKS_URL = f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json"
 
@@ -25,7 +24,6 @@ def _get_public_key():
     """Fetch and cache the Supabase EC public key from JWKS endpoint."""
     with urllib.request.urlopen(JWKS_URL, timeout=10) as r:
         jwks = json.loads(r.read().decode())
-    # Use the first key in the set
     jwk = jwks["keys"][0]
     return ECAlgorithm.from_jwk(json.dumps(jwk))
 
