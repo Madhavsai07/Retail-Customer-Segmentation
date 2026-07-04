@@ -1,28 +1,29 @@
 import {
   ScatterChart, Scatter, XAxis, YAxis, ZAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 
 const CLUSTER_COLORS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
-const PERSONA_NAMES = ['Champions', 'Loyal Customers', 'Occasional', 'At Risk', 'Bargain Hunters'];
 
-const CustomTooltip = ({ active, payload }) => {
+const CustomTooltip = ({ active, payload, personas }) => {
   if (active && payload?.length) {
     const d = payload[0].payload;
+    const name = personas?.find(p => p.cluster_id === d.Cluster)?.persona_name || `Cluster ${d.Cluster}`;
+    const color = personas?.find(p => p.cluster_id === d.Cluster)?.color || CLUSTER_COLORS[d.Cluster % CLUSTER_COLORS.length];
     return (
       <div className="bg-white border border-gray-100 shadow-lg rounded-xl px-4 py-3 text-sm">
         <p className="font-semibold text-gray-800 mb-2">Customer #{d.CustomerID}</p>
         <p className="text-gray-500">Recency: <span className="font-medium text-gray-800">{d.Recency} days</span></p>
         <p className="text-gray-500">Frequency: <span className="font-medium text-gray-800">{d.Frequency} orders</span></p>
         <p className="text-gray-500">Monetary: <span className="font-medium text-gray-800">£{d.Monetary?.toLocaleString()}</span></p>
-        <p className="text-gray-500 mt-1">Cluster: <span className="font-semibold" style={{ color: CLUSTER_COLORS[d.Cluster] }}>{PERSONA_NAMES[d.Cluster] || `Cluster ${d.Cluster}`}</span></p>
+        <p className="text-gray-500 mt-1">Cluster: <span className="font-semibold" style={{ color: color }}>{name}</span></p>
       </div>
     );
   }
   return null;
 };
 
-export default function ScatterPlot({ data = [], k = 4 }) {
+export default function ScatterPlot({ data = [], k = 4, personas = [] }) {
   const clusters = Array.from({ length: k }, (_, i) =>
     data.filter((d) => d.Cluster === i)
   );
@@ -57,32 +58,37 @@ export default function ScatterPlot({ data = [], k = 4 }) {
             tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
           />
           <ZAxis range={[30, 80]} />
-          <Tooltip content={<CustomTooltip />} />
-          {clusters.map((cData, idx) =>
-            cData.length > 0 && (
+          <Tooltip content={<CustomTooltip personas={personas} />} />
+          {clusters.map((cData, idx) => {
+            const name = personas?.find(p => p.cluster_id === idx)?.persona_name || `Cluster ${idx}`;
+            const color = personas?.find(p => p.cluster_id === idx)?.color || CLUSTER_COLORS[idx % CLUSTER_COLORS.length];
+            return cData.length > 0 && (
               <Scatter
                 key={idx}
-                name={PERSONA_NAMES[idx] || `Cluster ${idx}`}
+                name={name}
                 data={cData}
-                fill={CLUSTER_COLORS[idx % CLUSTER_COLORS.length]}
+                fill={color}
                 fillOpacity={0.75}
               />
-            )
-          )}
+            );
+          })}
         </ScatterChart>
       </ResponsiveContainer>
 
-
       <div className="flex flex-wrap gap-3 mt-2">
-        {Array.from({ length: k }, (_, i) => (
-          <div key={i} className="flex items-center gap-1.5 text-xs text-gray-600">
-            <span
-              className="w-2.5 h-2.5 rounded-full inline-block"
-              style={{ backgroundColor: CLUSTER_COLORS[i % CLUSTER_COLORS.length] }}
-            />
-            {PERSONA_NAMES[i] || `Cluster ${i}`}
-          </div>
-        ))}
+        {Array.from({ length: k }, (_, i) => {
+          const name = personas?.find(p => p.cluster_id === i)?.persona_name || `Cluster ${i}`;
+          const color = personas?.find(p => p.cluster_id === i)?.color || CLUSTER_COLORS[i % CLUSTER_COLORS.length];
+          return (
+            <div key={i} className="flex items-center gap-1.5 text-xs text-gray-600">
+              <span
+                className="w-2.5 h-2.5 rounded-full inline-block"
+                style={{ backgroundColor: color }}
+              />
+              {name}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
