@@ -20,6 +20,7 @@ backend/data/online_retail.xlsx
 Online Retail.xlsx
 *.csv
 !retail small dataset.csv
+!frontend/public/retail_small_dataset.csv
 
 # ── OS ────────────────────────────────────────────────
 .DS_Store

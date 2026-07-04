@@ -940,6 +940,17 @@ export default function Dashboard() {
                     </p>
                   </label>
 
+                  <div className="text-center text-xs text-gray-500 bg-gray-50/80 border border-gray-100 rounded-xl py-2.5 px-4 flex items-center justify-between">
+                    <span>Don't have a dataset to test?</span>
+                    <a
+                      href="/retail_small_dataset.csv"
+                      download="retail_small_dataset.csv"
+                      className="text-primary-600 hover:text-primary-700 font-semibold hover:underline flex items-center gap-1"
+                    >
+                      Download Sample CSV (3MB)
+                    </a>
+                  </div>
+
                   {uploadError && (
                     <div className="bg-red-50 border border-red-100 text-red-700 text-xs px-4 py-3 rounded-xl flex items-start gap-2.5">
                       <FiAlertTriangle className="text-red-500 shrink-0 mt-0.5" size={14} />
