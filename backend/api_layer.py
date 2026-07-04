@@ -403,8 +403,12 @@ def get_customer_transactions(customer_id: int, user: dict = Depends(auth.get_cu
 
     customer_df = customer_df.sort_values("InvoiceDate", ascending=False)
 
+    cols = ["InvoiceDate", "Quantity", "UnitPrice", "TotalPrice"]
+    if "Description" in customer_df.columns:
+        cols.append("Description")
+
     transactions = []
-    for _, row in customer_df[["InvoiceDate", "Description", "Quantity", "UnitPrice", "TotalPrice"]].iterrows():
+    for _, row in customer_df[cols].iterrows():
         desc = row.get("Description", "No Description")
         desc_str = str(desc) if not pd.isna(desc) else "No Description"
         
