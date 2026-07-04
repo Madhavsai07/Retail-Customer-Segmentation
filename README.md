@@ -4,6 +4,12 @@ A full-stack Machine Learning application that segments retail customers using *
 
 ---
 
+### 📥 Demo Dataset
+For quick testing and evaluation, a pre-formatted sample dataset is included in this repository:
+* **[Download Sample Dataset (retail small dataset.csv)](./retail%20small%20dataset.csv)** — Download this file and upload it in the dashboard to test the pipeline instantly!
+
+---
+
 ## 🚀 Overview
 
 RetailIQ helps businesses understand customer behavior by grouping customers into meaningful segments based on:

@@ -19,6 +19,7 @@ dev.log
 backend/data/online_retail.xlsx
 Online Retail.xlsx
 *.csv
+!retail small dataset.csv
 
 # ── OS ────────────────────────────────────────────────
 .DS_Store
