@@ -61,6 +61,7 @@ export default function Dashboard() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [loadingDemo, setLoadingDemo] = useState(false);
   const [pollIntervalId, setPollIntervalId] = useState(null);
   const [initialLoaded, setInitialLoaded] = useState(false);
 
@@ -254,6 +255,23 @@ export default function Dashboard() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/login');
+  };
+
+  const handleLoadSampleData = async () => {
+    setLoadingDemo(true);
+    setUploadError('');
+    try {
+      const response = await fetch('/retail_small_dataset.csv');
+      if (!response.ok) throw new Error('Sample dataset not found.');
+      const blob = await response.blob();
+      const file = new File([blob], 'retail_small_dataset.csv', { type: 'text/csv' });
+      await handleFileUpload(file);
+    } catch (err) {
+      console.error('Failed to load sample data:', err);
+      setUploadError('Failed to load sample dataset. Please try uploading manually.');
+    } finally {
+      setLoadingDemo(false);
+    }
   };
 
   const performSearch = async (query) => {
@@ -520,6 +538,27 @@ export default function Dashboard() {
               >
                 Upload Transaction Dataset
               </button>
+
+              <div className="flex items-center gap-3 mt-4 w-full max-w-xs">
+                <div className="h-px flex-1 bg-gray-200" />
+                <span className="text-xs text-gray-400 font-medium">or</span>
+                <div className="h-px flex-1 bg-gray-200" />
+              </div>
+
+              <button
+                onClick={handleLoadSampleData}
+                disabled={loadingDemo}
+                className="mt-1 border border-primary-200 bg-primary-50 hover:bg-primary-100 text-primary-700 font-semibold px-6 py-3 rounded-xl transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loadingDemo ? (
+                  <><FiRefreshCw size={15} className="animate-spin" /> Loading sample data…</>
+                ) : (
+                  <><FiLayers size={15} /> Try Sample Dataset</>
+                )}
+              </button>
+              <p className="text-xs text-gray-400 mt-2">
+                Loads a built-in retail dataset to explore the full workflow instantly.
+              </p>
             </div>
           )}
 
