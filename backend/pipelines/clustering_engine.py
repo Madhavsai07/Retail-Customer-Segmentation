@@ -25,7 +25,7 @@ def run_clustering(rfm_scaled: pd.DataFrame, k_values: list[int] = [3, 4, 5]) ->
         results: dict keyed by k with {'labels', 'centroids', 'inertia', 'model'}
     """
     feature_cols = ["Recency", "Frequency", "Monetary"]
-    X = rfm_scaled[feature_cols].values
+    X = np.ascontiguousarray(rfm_scaled[feature_cols].values, dtype=np.float64)
 
     results = {}
     for k in k_values:

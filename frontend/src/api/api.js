@@ -2,7 +2,7 @@ import axios from 'axios';
 import { supabase } from '../supabaseClient';
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "https://retail-customer-segmentation.onrender.com",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
   timeout: 30000,
 });
 
@@ -16,8 +16,15 @@ API.interceptors.request.use(async (req) => {
 
 API.interceptors.response.use(
   (res) => res,
-  (err) => {
+  async (err) => {
     console.error('[API Error]', err?.response?.data || err.message);
+    if (err?.response?.status === 401) {
+      // Clear expired session and redirect to login
+      await supabase.auth.signOut();
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
     return Promise.reject(err);
   }
 );
@@ -67,17 +74,25 @@ export const DUMMY_CLUSTER_SUMMARY = {
   ],
 };
 
-const baseScatter = Array.from({ length: 200 }, (_, i) => ({
-  CustomerID: 10000 + i,
-  Recency: Math.round(Math.random() * 365),
-  Frequency: Math.round(Math.random() * 20) + 1,
-  Monetary: Math.round(Math.random() * 8000) + 200,
-}));
+// F6 fix: deterministic dummy scatter — fixed seed values so the demo looks
+// consistent on every page load instead of randomising on import.
+const _seed = (n) => ((n * 1664525 + 1013904223) & 0xffffffff) >>> 0;
+const baseScatter = Array.from({ length: 200 }, (_, i) => {
+  const s1 = _seed(i + 1);
+  const s2 = _seed(s1);
+  const s3 = _seed(s2);
+  return {
+    CustomerID: 10000 + i,
+    Recency:   (s1 % 365) + 1,
+    Frequency: (s2 % 20)  + 1,
+    Monetary:  (s3 % 7800) + 200,
+  };
+});
 
 export const DUMMY_SCATTER = {
-  3: baseScatter.map(d => ({ ...d, Cluster: Math.floor(Math.random() * 3) })),
-  4: baseScatter.map(d => ({ ...d, Cluster: Math.floor(Math.random() * 4) })),
-  5: baseScatter.map(d => ({ ...d, Cluster: Math.floor(Math.random() * 5) })),
+  3: baseScatter.map((d, i) => ({ ...d, Cluster: i % 3 })),
+  4: baseScatter.map((d, i) => ({ ...d, Cluster: i % 4 })),
+  5: baseScatter.map((d, i) => ({ ...d, Cluster: i % 5 })),
 };
 
 export const DUMMY_PERSONAS = {

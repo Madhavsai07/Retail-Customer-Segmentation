@@ -57,9 +57,12 @@ export default function ClusterChart({ data = [], personas = [] }) {
           />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
           <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={60}>
-            {chartData.map((entry, idx) => (
-              <Cell key={idx} fill={CLUSTER_COLORS[idx % CLUSTER_COLORS.length]} />
-            ))}
+            {chartData.map((entry, idx) => {
+              // F4 fix: colour by cluster ID so bar chart matches persona card colours
+              const personaColor = personas.find(p => p.cluster_id === entry.Cluster)?.color;
+              const fill = personaColor || CLUSTER_COLORS[idx % CLUSTER_COLORS.length];
+              return <Cell key={idx} fill={fill} />;
+            })}
             <LabelList
               dataKey="pct"
               position="top"
@@ -72,15 +75,19 @@ export default function ClusterChart({ data = [], personas = [] }) {
 
 
       <div className="flex flex-wrap gap-3 mt-3">
-        {chartData.map((d, idx) => (
-          <div key={idx} className="flex items-center gap-1.5 text-xs text-gray-600">
-            <span
-              className="w-2.5 h-2.5 rounded-full inline-block"
-              style={{ backgroundColor: CLUSTER_COLORS[idx % CLUSTER_COLORS.length] }}
-            />
-            {d.name}
-          </div>
-        ))}
+        {chartData.map((d, idx) => {
+          const personaColor = personas.find(p => p.cluster_id === d.Cluster)?.color;
+          const dotColor = personaColor || CLUSTER_COLORS[idx % CLUSTER_COLORS.length];
+          return (
+            <div key={idx} className="flex items-center gap-1.5 text-xs text-gray-600">
+              <span
+                className="w-2.5 h-2.5 rounded-full inline-block"
+                style={{ backgroundColor: dotColor }}
+              />
+              {d.name}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

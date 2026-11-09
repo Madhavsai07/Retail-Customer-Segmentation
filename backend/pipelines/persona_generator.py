@@ -65,6 +65,16 @@ PERSONA_CATALOG = [
             "Highlight product bundles to maximize inventory turnover",
         ],
     },
+    {
+        "name": "Dormant",
+        "color": "#94a3b8",
+        "description": "Infrequent past customers with low monetary engagement.",
+        "recommendations": [
+            "Run automated win-back discount sequences",
+            "Survey reasons for inactivity",
+            "Highlight new collections and fresh arrivals",
+        ],
+    },
 ]
 
 
@@ -72,6 +82,7 @@ def _rank_clusters(rfm_raw: pd.DataFrame, labels: list[int], k: int) -> dict:
     """
     Assign a ranking to each cluster based on composite RFM score.
     Rank 0 = best (low recency, high freq, high monetary).
+    Uses method='first' to guarantee strictly unique ranks with zero collisions.
     """
     rfm_raw = rfm_raw.copy()
     rfm_raw["Cluster"] = labels
@@ -83,14 +94,18 @@ def _rank_clusters(rfm_raw: pd.DataFrame, labels: list[int], k: int) -> dict:
         cluster_size=("CustomerID", "count"),
     )
 
-    r_max = summary["avg_recency"].max()
+    r_max = summary["avg_recency"].max() if summary["avg_recency"].max() > 0 else 1.0
+    f_max = summary["avg_frequency"].max() if summary["avg_frequency"].max() > 0 else 1.0
+    m_max = summary["avg_monetary"].max() if summary["avg_monetary"].max() > 0 else 1.0
+
     summary["score"] = (
         (r_max - summary["avg_recency"]) / r_max
-        + summary["avg_frequency"] / summary["avg_frequency"].max()
-        + summary["avg_monetary"] / summary["avg_monetary"].max()
+        + summary["avg_frequency"] / f_max
+        + summary["avg_monetary"] / m_max
     )
 
-    ranking = summary["score"].rank(ascending=False).astype(int) - 1  # 0-indexed
+    # Use method="first" to guarantee every cluster gets a distinct 0-indexed integer rank
+    ranking = summary["score"].rank(ascending=False, method="first").astype(int) - 1
     return summary, ranking
 
 

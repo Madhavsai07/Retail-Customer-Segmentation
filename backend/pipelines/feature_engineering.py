@@ -48,6 +48,12 @@ def engineer_features(df: pd.DataFrame, output_dir: Path = None) -> tuple[pd.Dat
     rfm_raw = compute_rfm(df)
 
     rfm_scaled = rfm_raw.copy()
+    # Log1p requires non-negative values. If any net returns resulted in Monetary <= 0,
+    # clip to 0 to prevent NaN or domain errors.
+    rfm_scaled["Monetary"] = np.clip(rfm_scaled["Monetary"], a_min=0, a_max=None)
+    rfm_scaled["Recency"] = np.clip(rfm_scaled["Recency"], a_min=0, a_max=None)
+    rfm_scaled["Frequency"] = np.clip(rfm_scaled["Frequency"], a_min=0, a_max=None)
+
     for col in ["Recency", "Frequency", "Monetary"]:
         rfm_scaled[col] = np.log1p(rfm_scaled[col])
 

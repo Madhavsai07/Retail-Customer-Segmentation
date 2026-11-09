@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FiBarChart2, FiUsers, FiLayers, FiActivity, FiBookmark,
@@ -9,6 +9,9 @@ import KPIBox from '../components/KPIBox';
 import ClusterChart from '../components/ClusterChart';
 import ScatterPlot from '../components/ScatterPlot';
 import PersonaCard from '../components/PersonaCard';
+import UploadModal from '../components/UploadModal';
+import ClusterModal from '../components/ClusterModal';
+import CustomerSearch from '../components/CustomerSearch';
 import {
   getMetrics, getSegments, getPersonas, getCustomer, getDummyCustomer,
   getClusterCustomers, getDummyClusterCustomers, getCustomerTransactions,
@@ -321,9 +324,11 @@ export default function Dashboard() {
     }
   }, [searchQuery]);
 
-  const filteredScatter = filterCluster === 'all'
-    ? scatterData.slice(0, topN)
-    : scatterData.filter((d) => d.Cluster === Number(filterCluster)).slice(0, topN);
+  const filteredScatter = useMemo(() => {
+    return filterCluster === 'all'
+      ? scatterData.slice(0, topN)
+      : scatterData.filter((d) => d.Cluster === Number(filterCluster)).slice(0, topN);
+  }, [filterCluster, scatterData, topN]);
 
   const Sidebar = (
     <aside className={`
@@ -529,8 +534,6 @@ export default function Dashboard() {
                     icon={<FiUsers />}
                     iconBg="bg-primary-100"
                     iconColor="text-primary-600"
-                    trend="up"
-                    trendLabel="+8% MoM"
                   />
                   <KPIBox
                     title="Avg Recency"
@@ -539,8 +542,6 @@ export default function Dashboard() {
                     icon={<FiClock />}
                     iconBg="bg-amber-100"
                     iconColor="text-amber-600"
-                    trend="neutral"
-                    trendLabel="stable"
                   />
                   <KPIBox
                     title="Avg Frequency"
@@ -549,8 +550,6 @@ export default function Dashboard() {
                     icon={<FiShoppingCart />}
                     iconBg="bg-emerald-100"
                     iconColor="text-emerald-600"
-                    trend="up"
-                    trendLabel="+5%"
                   />
                   <KPIBox
                     title="Total Revenue"
@@ -559,8 +558,6 @@ export default function Dashboard() {
                     icon={<FiDollarSign />}
                     iconBg="bg-accent-100"
                     iconColor="text-accent-600"
-                    trend="up"
-                    trendLabel="+12% YoY"
                   />
                 </div>
               </section>
@@ -690,422 +687,49 @@ export default function Dashboard() {
               )}
 
               {activeSection === 'search' && (
-                <section>
-                  <div className="card mb-6 p-6">
-                    <h2 className="text-lg font-bold text-gray-800 mb-4">Search Customer Profile</h2>
-                    <form onSubmit={handleSearch} className="flex gap-3 max-w-md">
-                      <div className="relative flex-1">
-                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input
-                          type="number"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Enter Customer ID (e.g., 17850)"
-                          className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-shadow text-sm"
-                        />
-                      </div>
-                      <button type="submit" className="bg-primary-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-primary-700 transition flex items-center gap-2" disabled={searchLoading}>
-                        {searchLoading ? <FiRefreshCw className="animate-spin" /> : 'Search'}
-                      </button>
-                    </form>
-                    {searchError && <p className="text-red-500 text-sm mt-3">{searchError}</p>}
-                  </div>
-
-                  {searchResult && (
-                    <div className="space-y-6">
-                      <div className="card bg-gradient-to-r from-primary-50 to-white flex items-center gap-4 py-5 px-6">
-                        <div className="w-12 h-12 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center font-bold text-xl">
-                          <FiUsers />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-800">Customer {searchResult.customer_id}</h3>
-                          <div className="flex gap-2 mt-2">
-                            <span className="bg-primary-100 text-primary-700 text-xs font-semibold px-2 py-1 rounded-md">Cluster {searchResult.cluster_id}</span>
-                            <span className="bg-emerald-100 text-emerald-700 text-xs font-semibold px-2 py-1 rounded-md">{searchResult.persona_name}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid md:grid-cols-3 gap-6">
-                        <KPIBox
-                          title="Recency"
-                          value={`${searchResult.metrics.recency} d`}
-                          subtitle={`Cluster Avg: ${searchResult.cluster_averages.recency} d`}
-                          icon={<FiClock />} iconBg="bg-blue-100" iconColor="text-blue-600"
-                          trend={searchResult.metrics.recency <= searchResult.cluster_averages.recency ? 'up' : 'down'}
-                          trendLabel={searchResult.metrics.recency <= searchResult.cluster_averages.recency ? 'Better' : 'Worse'}
-                        />
-                        <KPIBox
-                          title="Frequency"
-                          value={searchResult.metrics.frequency}
-                          subtitle={`Cluster Avg: ${searchResult.cluster_averages.frequency}`}
-                          icon={<FiShoppingCart />} iconBg="bg-emerald-100" iconColor="text-emerald-600"
-                          trend={searchResult.metrics.frequency >= searchResult.cluster_averages.frequency ? 'up' : 'down'}
-                          trendLabel={searchResult.metrics.frequency >= searchResult.cluster_averages.frequency ? 'Better' : 'Worse'}
-                        />
-                        <KPIBox
-                          title="Total Spend"
-                          value={`£${searchResult.metrics.monetary}`}
-                          subtitle={`Cluster Avg: £${searchResult.cluster_averages.monetary}`}
-                          icon={<FiDollarSign />} iconBg="bg-amber-100" iconColor="text-amber-600"
-                          trend={searchResult.metrics.monetary >= searchResult.cluster_averages.monetary ? 'up' : 'down'}
-                          trendLabel={searchResult.metrics.monetary >= searchResult.cluster_averages.monetary ? 'Better' : 'Worse'}
-                        />
-                      </div>
-
-                      {(transactions.length > 0 || txLoading) && (
-                        <div className="card p-0 overflow-hidden">
-                          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white">
-                            <div>
-                              <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
-                                <FiShoppingCart className="text-primary-500" />
-                                Customer Purchase History
-                              </h4>
-                              <p className="text-xs text-gray-400 mt-0.5">
-                                {transactions.length} transactions found · showing {showAllTx ? transactions.length : Math.min(12, transactions.length)} most recent
-                              </p>
-                            </div>
-                            {transactions.length > 12 && (
-                              <button
-                                 onClick={() => setShowAllTx(v => !v)}
-                                 className="text-xs font-semibold text-primary-600 hover:text-primary-800 bg-primary-50 hover:bg-primary-100 px-3 py-1.5 rounded-lg transition-colors"
-                              >
-                                {showAllTx ? 'Show Less' : `Show All ${transactions.length}`}
-                              </button>
-                            )}
-                          </div>
-
-                          {txLoading ? (
-                            <div className="flex items-center justify-center h-32 text-gray-400">
-                              <FiRefreshCw className="animate-spin mr-2" /> Loading transactions…
-                            </div>
-                          ) : (
-                            <div className="overflow-x-auto max-h-80 overflow-y-auto">
-                              <table className="w-full text-sm">
-                                <thead className="sticky top-0 bg-slate-50 text-slate-500 text-xs uppercase tracking-wider z-10">
-                                  <tr>
-                                    <th className="px-5 py-3 text-left border-b border-gray-100">Date</th>
-                                    <th className="px-5 py-3 text-left border-b border-gray-100">Product</th>
-                                    <th className="px-5 py-3 text-right border-b border-gray-100">Qty</th>
-                                    <th className="px-5 py-3 text-right border-b border-gray-100">Unit Price</th>
-                                    <th className="px-5 py-3 text-right border-b border-gray-100">Total</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-50">
-                                  {(showAllTx ? transactions : transactions.slice(0, 12)).map((tx, i) => {
-                                    const isRecent = i < 3;
-                                    return (
-                                      <tr
-                                        key={i}
-                                        className={`transition-colors hover:bg-primary-50/40 ${
-                                          isRecent ? 'bg-emerald-50/40' : 'bg-white'
-                                        }`}
-                                      >
-                                        <td className="px-5 py-2.5 text-gray-500 whitespace-nowrap">
-                                          {isRecent && (
-                                            <span className="inline-block w-1.5 h-1.5 bg-emerald-400 rounded-full mr-2 align-middle" />
-                                          )}
-                                          {tx.InvoiceDate}
-                                        </td>
-                                        <td className="px-5 py-2.5 text-gray-700 max-w-xs">
-                                          <span className="line-clamp-1" title={tx.Description}>
-                                            {tx.Description}
-                                          </span>
-                                        </td>
-                                        <td className="px-5 py-2.5 text-right font-medium text-gray-700">{tx.Quantity.toLocaleString()}</td>
-                                        <td className="px-5 py-2.5 text-right text-gray-500">£{tx.UnitPrice.toFixed(2)}</td>
-                                        <td className="px-5 py-2.5 text-right font-semibold text-emerald-700">
-                                          £{tx.TotalPrice.toFixed(2)}
-                                        </td>
-                                      </tr>
-                                    );
-                                  })}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {!txLoading && transactions.length === 0 && backendUp && (
-                        <div className="card flex items-center gap-3 py-5 px-6 text-gray-400 text-sm border-dashed">
-                          <FiAlertTriangle className="text-amber-400" size={18} />
-                          No purchase history available for this customer.
-                        </div>
-                      )}
-
-                      {topProducts.length > 0 && (
-                        <div className="card p-6">
-                          <h4 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <FiBarChart2 className="text-accent-500" />
-                            Top Products Bought by This Customer
-                          </h4>
-                          <div className="space-y-3">
-                            {(() => {
-                              const maxQty = topProducts[0]?.total_qty || 1;
-                              return topProducts.map((p, i) => {
-                                const pct = Math.round((p.total_qty / maxQty) * 100);
-                                const colors = [
-                                  'from-primary-500 to-primary-400',
-                                  'from-accent-500 to-accent-400',
-                                  'from-emerald-500 to-emerald-400',
-                                  'from-amber-500 to-amber-400',
-                                  'from-rose-500 to-rose-400',
-                                ];
-                                return (
-                                  <div key={i}>
-                                    <div className="flex justify-between text-xs mb-1">
-                                      <span className="text-gray-700 font-medium truncate max-w-[70%]" title={p.product}>
-                                        {i + 1}. {p.product}
-                                      </span>
-                                      <span className="text-gray-500 font-semibold">{p.total_qty.toLocaleString()} units</span>
-                                    </div>
-                                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                      <div
-                                         className={`h-full rounded-full bg-gradient-to-r ${colors[i]} transition-all duration-700`}
-                                         style={{ width: `${pct}%` }}
-                                      />
-                                    </div>
-                                  </div>
-                                );
-                              });
-                            })()}
-                          </div>
-                        </div>
-                      )}
-
-                      {searchResult.recommendations && searchResult.recommendations.length > 0 && (
-                        <div className="card mt-2 p-6">
-                          <h4 className="text-gray-800 font-bold mb-3 flex items-center gap-2">
-                            <FiBookmark className="text-primary-500" />
-                            Targeted Actions for {searchResult.persona_name}
-                          </h4>
-                          <ul className="space-y-2">
-                            {searchResult.recommendations.map((rec, i) => (
-                              <li key={i} className="flex gap-3 text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100 items-start">
-                                <span className="text-primary-500 font-bold mt-0.5">•</span>
-                                <span>{rec}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </section>
+                <CustomerSearch
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  searchResult={searchResult}
+                  searchLoading={searchLoading}
+                  searchError={searchError}
+                  onSearch={handleSearch}
+                  transactions={transactions}
+                  topProducts={topProducts}
+                  txLoading={txLoading}
+                  showAllTx={showAllTx}
+                  setShowAllTx={setShowAllTx}
+                  backendUp={backendUp}
+                />
               )}
             </>
           )}
         </main>
       </div>
 
-      {showUploadModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg flex flex-col max-h-[90vh] animate-slide-up overflow-hidden border border-gray-100">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <FiLayers className="text-primary-500" />
-                  Upload Transaction Data
-                </h3>
-                <p className="text-xs text-gray-400 mt-0.5">CSV or Excel format with customer purchase records</p>
-              </div>
-              {!uploading && (
-                <button
-                  onClick={() => setShowUploadModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-lg"
-                >
-                  <FiX size={20} />
-                </button>
-              )}
-            </div>
+      <UploadModal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        uploading={uploading}
+        uploadError={uploadError}
+        pipelineProgress={pipelineProgress}
+        onFileUpload={handleFileUpload}
+      />
 
-            <div className="p-6 overflow-y-auto space-y-6">
-              {!uploading ? (
-                <>
-                  <label className="border-2 border-dashed border-gray-200 hover:border-primary-400 bg-gray-50/50 hover:bg-primary-50/10 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all group">
-                    <input
-                      type="file"
-                      accept=".csv,.xlsx,.xls"
-                      className="hidden"
-                      onChange={(e) => handleFileUpload(e.target.files[0])}
-                    />
-                    <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 group-hover:text-primary-500 transition-colors mb-4">
-                      <FiLayers size={22} />
-                    </div>
-                    <p className="text-sm font-semibold text-gray-700">Click to upload or drag & drop</p>
-                    <p className="text-xs text-gray-400 mt-1 text-center">
-                      Supports .csv, .xlsx, .xls files.<br />
-                      Must contain columns: <span className="font-semibold text-gray-600">CustomerID, InvoiceDate, Quantity, UnitPrice</span>
-                    </p>
-                  </label>
-
-                  <div className="text-center text-xs text-gray-500 bg-gray-50/80 border border-gray-100 rounded-xl py-2.5 px-4 flex items-center justify-between">
-                    <span>Don't have a dataset to test?</span>
-                    <a
-                      href="/retail_small_dataset.csv"
-                      download="retail_small_dataset.csv"
-                      className="text-primary-600 hover:text-primary-700 font-semibold hover:underline flex items-center gap-1"
-                    >
-                      Download Sample CSV (3MB)
-                    </a>
-                  </div>
-
-                  {uploadError && (
-                    <div className="bg-red-50 border border-red-100 text-red-700 text-xs px-4 py-3 rounded-xl flex items-start gap-2.5">
-                      <FiAlertTriangle className="text-red-500 shrink-0 mt-0.5" size={14} />
-                      <div>
-                        <p className="font-semibold">Upload Failed</p>
-                        <p className="mt-0.5 text-red-600 leading-relaxed">{uploadError}</p>
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="space-y-6">
-                  <div className="text-center space-y-3">
-                    <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
-                      <div className="absolute inset-0 border-4 border-primary-100 border-t-primary-600 rounded-full animate-spin" />
-                      <FiActivity className="text-primary-600 animate-pulse" size={24} />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-gray-900 text-base">{pipelineProgress?.step || 'Running ML Pipeline...'}</h4>
-                      <p className="text-xs text-gray-400 mt-0.5">Please keep this window open while we run the analysis</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-semibold text-gray-500">
-                      <span>Overall Progress</span>
-                      <span>{pipelineProgress?.progress || 0}%</span>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-primary-500 to-accent-400 transition-all duration-500 rounded-full"
-                        style={{ width: `${pipelineProgress?.progress || 0}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/30 space-y-3 text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Pipeline Stages</span>
-                    </div>
-                    <div className="space-y-2.5">
-                      <div className="flex items-center justify-between text-gray-600">
-                        <span className="flex items-center gap-2">
-                          {pipelineProgress?.progress > 20 ? '✅' : '⏳'} 1. Clean Data
-                        </span>
-                        {pipelineProgress?.cleaning_summary && (
-                          <span className="text-xs font-medium text-gray-400">
-                            {pipelineProgress.cleaning_summary.final_rows?.toLocaleString()} rows
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center text-gray-600 gap-2">
-                        {pipelineProgress?.progress > 40 ? '✅' : '⏳'} 2. Compute RFM Features
-                      </div>
-                      <div className="flex items-center text-gray-600 gap-2">
-                        {pipelineProgress?.progress > 60 ? '✅' : '⏳'} 3. Find Optimal Clusters
-                      </div>
-                      <div className="flex items-center text-gray-600 gap-2">
-                        {pipelineProgress?.progress > 80 ? '✅' : '⏳'} 4. Train K-Means Model
-                      </div>
-                      <div className="flex items-center text-gray-600 gap-2">
-                        {pipelineProgress?.progress >= 100 ? '✅' : '⏳'} 5. Generate Personas
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {modalCluster !== null && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl flex flex-col max-h-[85vh] animate-slide-up">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <FiUsers className="text-primary-500" />
-                Customers in Cluster {modalCluster}
-                {!modalLoading && (
-                  <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-md ml-2">{modalData.length} total</span>
-                )}
-              </h3>
-              <button onClick={() => setModalCluster(null)} className="text-gray-400 hover:text-gray-600 transition-colors">
-                <FiX size={24} />
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto px-6 py-4 bg-gray-50/50">
-              {modalLoading ? (
-                <div className="flex flex-col items-center justify-center h-48 text-gray-400">
-                  <FiRefreshCw className="animate-spin mb-2" size={24} />
-                  <p className="text-sm">Loading customer list...</p>
-                </div>
-              ) : modalError ? (
-                <div className="flex flex-col items-center justify-center py-16 text-red-500 bg-white rounded-xl border border-dashed border-red-200">
-                  <FiAlertTriangle size={48} className="text-red-200 mb-4" />
-                  <p className="text-lg font-medium">{modalError}</p>
-                  <button 
-                    onClick={() => handleClusterClick(modalCluster)}
-                    className="mt-4 text-sm font-semibold text-primary-600 hover:underline flex items-center gap-1"
-                  >
-                    <FiRefreshCw size={14} /> Try again
-                  </button>
-                </div>
-              ) : modalData.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-white rounded-xl border border-dashed border-gray-200">
-                  <FiUsers size={48} className="text-gray-200 mb-4" />
-                  <p className="text-lg font-medium text-gray-700">No customers scattered here</p>
-                  <p className="text-sm mt-1 text-gray-400 text-center max-w-sm">We couldn't track down any customers matching this cluster setup.</p>
-                </div>
-              ) : (
-                <div className="bg-white border text-left border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                  <table className="w-full text-sm">
-                    <thead className="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-wider">
-                      <tr>
-                        <th className="px-5 py-4 border-b border-gray-100 text-left">Customer ID</th>
-                        <th className="px-5 py-4 border-b border-gray-100 text-right">Recency (Days)</th>
-                        <th className="px-5 py-4 border-b border-gray-100 text-right">Frequency</th>
-                        <th className="px-5 py-4 border-b border-gray-100 text-right">Monetary (£)</th>
-                        <th className="px-5 py-4 border-b border-gray-100 text-center">Take Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50 overflow-y-auto">
-                      {modalData.map(c => (
-                        <tr key={c.CustomerID} className="hover:bg-indigo-50/40 focus-within:bg-indigo-50 transition-colors group">
-                          <td className="px-5 py-3 font-semibold text-gray-700">
-                            <span className="bg-gray-100 text-gray-600 rounded-md px-2 py-1 text-xs">{c.CustomerID}</span>
-                          </td>
-                          <td className="px-5 py-3 text-right text-gray-600 font-medium">{Number(c.Recency).toLocaleString()}d</td>
-                          <td className="px-5 py-3 text-right text-gray-600">{Number(c.Frequency).toLocaleString()}x</td>
-                          <td className="px-5 py-3 text-right text-emerald-600 font-semibold tracking-tight">£{Number(c.Monetary).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                          <td className="px-5 py-3 text-center">
-                            <button
-                               onClick={() => {
-                                 setModalCluster(null);
-                                 setSearchQuery(c.CustomerID.toString());
-                                 setActiveSection('search');
-                                 performSearch(c.CustomerID);
-                               }}
-                               className="text-xs text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-full font-medium transition-colors inline-flex items-center justify-center gap-1.5 w-full opacity-80 group-hover:opacity-100"
-                            >
-                               <FiSearch size={12} /> Inspect
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <ClusterModal
+        clusterId={modalCluster}
+        onClose={() => setModalCluster(null)}
+        modalData={modalData}
+        modalLoading={modalLoading}
+        modalError={modalError}
+        onRetry={() => handleClusterClick(modalCluster)}
+        onInspectCustomer={(customerId) => {
+          setModalCluster(null);
+          setSearchQuery(customerId.toString());
+          setActiveSection('search');
+          performSearch(customerId);
+        }}
+      />
     </div>
   );
 }

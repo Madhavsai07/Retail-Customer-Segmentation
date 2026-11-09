@@ -187,10 +187,9 @@ def download_analysis_file(
         ).reset_index().round(2)
 
         stream = io.StringIO()
-        stream.write("CLUSTER SUMMARY STATISTICS\n")
+        # B5 fix: clean CSV only — no banner text prefix that breaks parsers
         summary_df.to_csv(stream, index=False)
         stream.write("\n")
-        stream.write("TRANSACTIONS DATA\n")
         clustered_tx.to_csv(stream, index=False)
         
         stream.seek(0)
@@ -311,7 +310,7 @@ def get_personas(k: int = 4, user: dict = Depends(auth.get_current_user)):
 
 
 @router.get("/customer/{customer_id}", tags=["analytics"])
-def get_customer(customer_id: int, k: int = 4, user: dict = Depends(auth.get_current_user)):
+def get_customer(customer_id: str, k: int = 4, user: dict = Depends(auth.get_current_user)):
     """Look up a specific customer's RFM metrics, cluster, and recommendations."""
     email = user["email"]
     d = get_user_data(email)
@@ -386,7 +385,7 @@ def get_cluster_customers(cluster_id: int, k: int = 4, user: dict = Depends(auth
 
 
 @router.get("/customer/{customer_id}/transactions", tags=["analytics"])
-def get_customer_transactions(customer_id: int, user: dict = Depends(auth.get_current_user)):
+def get_customer_transactions(customer_id: str, user: dict = Depends(auth.get_current_user)):
     """Return the full purchase history for a specific customer, sorted newest-first."""
     email = user["email"]
     d = get_user_data(email)
@@ -403,25 +402,20 @@ def get_customer_transactions(customer_id: int, user: dict = Depends(auth.get_cu
 
     customer_df = customer_df.sort_values("InvoiceDate", ascending=False)
 
-    cols = ["InvoiceDate", "Quantity", "UnitPrice", "TotalPrice"]
-    if "Description" in customer_df.columns:
-        cols.append("Description")
+    # B4 fix: vectorised serialisation — no iterrows() loop
+    has_desc = "Description" in customer_df.columns
+    tx_df = customer_df.copy()
+    tx_df["_date_str"] = tx_df["InvoiceDate"].dt.strftime("%Y-%m-%d %H:%M")
+    tx_df["_desc"] = tx_df["Description"].fillna("No Description").astype(str) if has_desc else "No Description"
 
-    transactions = []
-    for _, row in customer_df[cols].iterrows():
-        desc = row.get("Description", "No Description")
-        desc_str = str(desc) if not pd.isna(desc) else "No Description"
-        
-        transactions.append({
-            "InvoiceDate": row["InvoiceDate"].strftime("%Y-%m-%d %H:%M") if hasattr(row["InvoiceDate"], "strftime") else str(row["InvoiceDate"]),
-            "Description": desc_str,
-            "Quantity": int(row.get("Quantity", 1)),
-            "UnitPrice": round(float(row.get("UnitPrice", 0.0)), 2),
-            "TotalPrice": round(float(row.get("TotalPrice", 0.0)), 2),
-        })
+    transactions = (
+        tx_df[["_date_str", "_desc", "Quantity", "UnitPrice", "TotalPrice"]]
+        .rename(columns={"_date_str": "InvoiceDate", "_desc": "Description"})
+        .to_dict(orient="records")
+    )
 
     top_products_list = []
-    if "Description" in customer_df.columns:
+    if has_desc:
         top_products = (
             customer_df.groupby("Description")["Quantity"]
             .sum()

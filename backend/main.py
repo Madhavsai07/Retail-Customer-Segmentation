@@ -76,7 +76,7 @@ def load_user_artifacts(email: str) -> dict:
         with open(user_dir / "personas.json") as f:
             all_personas = json.load(f)
 
-        k_vals = list(range(3, 7))
+        k_vals = [3, 4, 5]
         clustering_results = run_clustering(rfm_scaled, k_values=k_vals)
         best_k, silhouette_scores = evaluate_models(rfm_scaled, clustering_results)
 
@@ -137,7 +137,7 @@ def run_user_pipeline_task(email: str, df: pd.DataFrame):
         pipeline_status[email]["step"] = "Finding optimal clusters..."
         pipeline_status[email]["progress"] = 60
 
-        k_vals = list(range(3, 7))
+        k_vals = [3, 4, 5]
         clustering_results = run_clustering(rfm_scaled, k_values=k_vals)
         best_k, silhouette_scores = evaluate_models(rfm_scaled, clustering_results)
         

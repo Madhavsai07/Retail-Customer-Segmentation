@@ -1,13 +1,14 @@
 """
 evaluation.py
-Computes silhouette scores for each fitted K-Means model
-and returns the best k and scores dict.
+Computes Silhouette and Davies-Bouldin scores for each fitted K-Means model
+and returns the best k (highest silhouette) and all scores.
 """
 
 import logging
+import numpy as np
 import pandas as pd
 from pathlib import Path
-from sklearn.metrics import silhouette_score
+from sklearn.metrics import silhouette_score, davies_bouldin_score
 
 logger = logging.getLogger(__name__)
 
@@ -16,24 +17,30 @@ ARTIFACTS_DIR = Path(__file__).resolve().parents[1] / "artifacts"
 
 def evaluate_models(rfm_scaled: pd.DataFrame, results: dict) -> tuple[int, dict]:
     """
-    Compute silhouette scores for each k.
+    Compute Silhouette and Davies-Bouldin scores for each k.
 
     Returns:
         best_k: k with highest silhouette score
-        scores: {k: silhouette_score}
+        scores: {k: silhouette_score}  (used by the rest of the app)
     """
     feature_cols = ["Recency", "Frequency", "Monetary"]
-    X = rfm_scaled[feature_cols].values
+    X = np.ascontiguousarray(rfm_scaled[feature_cols].values, dtype=np.float64)
 
     scores = {}
     for k, data in results.items():
         labels = data["labels"]
-        score = silhouette_score(X, labels, sample_size=min(5000, len(X)), random_state=42)
-        scores[k] = round(float(score), 4)
-        logger.info(f"k={k} → silhouette score = {scores[k]}")
+        n_unique = len(np.unique(labels))
+        if n_unique < 2 or n_unique >= len(X):
+            sil = 0.0
+            db = 0.0
+        else:
+            sil = silhouette_score(X, labels, sample_size=min(5000, len(X)), random_state=42)
+            db  = davies_bouldin_score(X, labels)
+        scores[k] = round(float(sil), 4)
+        logger.info(f"k={k} → Silhouette={scores[k]:.4f} | Davies-Bouldin={db:.4f}")
 
     best_k = max(scores, key=scores.get)
-    logger.info(f"Best k selected: {best_k} (score={scores[best_k]})")
+    logger.info(f"Best k selected: {best_k} (silhouette={scores[best_k]})")
     return best_k, scores
 
 
